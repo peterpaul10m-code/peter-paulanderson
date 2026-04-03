@@ -1,0 +1,129 @@
+library(tidyverse)
+library(lubridate)
+
+# --------------------------------------------------
+# Helper: create one city's hourly weather + demand
+# --------------------------------------------------
+generate_city_weather_bike_data <- function(city_name) {
+  
+  # Create 24 hourly timestamps starting now
+  start_time <- floor_date(Sys.time(), unit = "hour")
+  forecast_datetime <- seq(from = start_time, by = "hour", length.out = 24)
+  Hour <- hour(forecast_datetime)
+  
+  # Simple city-specific baseline temperatures
+  city_temp_base <- case_when(
+    city_name == "Seoul" ~ 18,
+    city_name == "New York" ~ 16,
+    city_name == "Paris" ~ 15,
+    city_name == "Suzhou" ~ 20,
+    city_name == "London" ~ 14,
+    TRUE ~ 17
+  )
+  
+  # Generate plausible weather patterns
+  TEMPERATURE <- round(city_temp_base + 7 * sin((Hour - 6) / 24 * 2 * pi) + rnorm(24, 0, 1.5), 1)
+  HUMIDITY <- pmax(30, pmin(95, round(65 + 15 * sin((Hour + 3) / 24 * 2 * pi) + rnorm(24, 0, 5), 0)))
+  WIND_SPEED <- pmax(0.5, round(rnorm(24, mean = 2.5, sd = 1), 1))
+  VISIBILITY <- pmax(200, round(rnorm(24, mean = 1400, sd = 250), 0))
+  SOLAR_RADIATION <- pmax(0, round(3 * sin((Hour - 6) / 24 * pi), 2))
+  RAINFALL <- ifelse(runif(24) < 0.12, round(runif(24, 0, 6), 1), 0)
+  SNOWFALL <- rep(0, 24)
+  
+  SEASONS <- rep("Spring", 24)
+  HOLIDAY <- rep("No Holiday", 24)
+  FUNCTIONING_DAY <- rep("Yes", 24)
+  
+  WEATHER <- case_when(
+    RAINFALL > 0 ~ "Rain",
+    HUMIDITY > 85 ~ "Cloudy",
+    TRUE ~ "Clear"
+  )
+  
+  # Simple synthetic bike-demand formula
+  rush_hour_bonus <- ifelse(Hour %in% c(7, 8, 9, 17, 18, 19), 220, 0)
+  temp_effect <- pmax(0, (TEMPERATURE - 5) * 18)
+  humidity_penalty <- (HUMIDITY - 60) * 2
+  rain_penalty <- RAINFALL * 45
+  wind_penalty <- WIND_SPEED * 12
+  
+  RENTED_BIKE_COUNT <- round(
+    250 + rush_hour_bonus + temp_effect - humidity_penalty - rain_penalty - wind_penalty + rnorm(24, 0, 25),
+    0
+  )
+  
+  RENTED_BIKE_COUNT <- pmax(RENTED_BIKE_COUNT, 0)
+  
+  data.frame(
+    city = city_name,
+    forecast_datetime = forecast_datetime,
+    WEATHER = WEATHER,
+    TEMPERATURE = TEMPERATURE,
+    HUMIDITY = HUMIDITY,
+    WIND_SPEED = WIND_SPEED,
+    VISIBILITY = VISIBILITY,
+    SOLAR_RADIATION = SOLAR_RADIATION,
+    RAINFALL = RAINFALL,
+    SNOWFALL = SNOWFALL,
+    SEASONS = SEASONS,
+    HOLIDAY = HOLIDAY,
+    FUNCTIONING_DAY = FUNCTIONING_DAY,
+    Hour = Hour,
+    RENTED_BIKE_COUNT = RENTED_BIKE_COUNT
+  )
+}
+
+# --------------------------------------------------
+# Build combined weather forecast data for cities
+# --------------------------------------------------
+get_weather_forecast_by_cities <- function(city_names) {
+  city_dfs <- lapply(city_names, generate_city_weather_bike_data)
+  bind_rows(city_dfs)
+}
+
+# --------------------------------------------------
+# Placeholder load model function
+# Keeps compatibility with server logic
+# --------------------------------------------------
+load_saved_model <- function(model_name = "model.csv") {
+  return(NULL)
+}
+
+# --------------------------------------------------
+# Placeholder prediction function
+# If ever called directly, returns a simple numeric vector
+# --------------------------------------------------
+predict_bike_demand <- function(TEMPERATURE, HUMIDITY, WIND_SPEED, VISIBILITY,
+                                SOLAR_RADIATION, RAINFALL, SNOWFALL, SEASONS,
+                                HOLIDAY, FUNCTIONING_DAY, Hour, model = NULL) {
+  
+  rush_hour_bonus <- ifelse(Hour %in% c(7, 8, 9, 17, 18, 19), 220, 0)
+  temp_effect <- pmax(0, (TEMPERATURE - 5) * 18)
+  humidity_penalty <- (HUMIDITY - 60) * 2
+  rain_penalty <- RAINFALL * 45
+  wind_penalty <- WIND_SPEED * 12
+  
+  preds <- round(
+    250 + rush_hour_bonus + temp_effect - humidity_penalty - rain_penalty - wind_penalty,
+    0
+  )
+  
+  preds <- pmax(preds, 0)
+  return(preds)
+}
+
+# --------------------------------------------------
+# Main wrapper used by server.R
+# --------------------------------------------------
+get_weather_bike_data <- function() {
+  city_names <- c("Seoul", "New York", "Paris", "Suzhou", "London")
+  weather_df <- get_weather_forecast_by_cities(city_names)
+  return(weather_df)
+}
+
+# --------------------------------------------------
+# Optional console test
+# --------------------------------------------------
+test_weather_data_generation <- function() {
+  print(get_weather_bike_data())
+}
