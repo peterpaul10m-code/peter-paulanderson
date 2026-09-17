@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ai-interview-gym-micro1-zara
+    runtime: node
+    region: virginia
+    plan: 0.5c-512mb
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    numInstances: 1
+    envVars:
+      - key: LEAD_EXPORT_TOKEN
+        sync: false
+      - key: GUIDE_ACCESS_SECRET
+        sync: false
+    disk:
+      name: lead-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
