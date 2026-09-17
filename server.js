@@ -13,6 +13,7 @@ const GYM_FILE = path.join(ROOT, 'private', 'gym-content.html');
 const EXPORT_TOKEN = process.env.LEAD_EXPORT_TOKEN || '';
 const GUIDE_SECRET = process.env.GUIDE_ACCESS_SECRET || '';
 const OWNER_SECRET = process.env.OWNER_ACCESS_SECRET || '';
+const OWNER_CONFIGURED = OWNER_SECRET.length >= 24 && OWNER_SECRET !== 'owner-access-not-configured';
 const ACCESS_TTL_MS = 30 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const SESSION_COOKIE = 'aig_access';
@@ -126,7 +127,7 @@ function ownerPage(){return `<!doctype html><html lang="en"><head><meta charset=
 
 const server=http.createServer(async (req,res)=>{
   const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
-  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',accessGate:!!GUIDE_SECRET,accessGateVersion:'v4-30-day-session',ownerAccess:!!OWNER_SECRET});
+  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',accessGate:!!GUIDE_SECRET,accessGateVersion:'v4-30-day-session',ownerAccess:OWNER_CONFIGURED});
   if(req.method==='GET' && url.pathname==='/api/access'){
     const session=sessionFromRequest(req);
     return send(res,200,{ok:true,authorized:!!session,role:session?.role||null,guide:session?'/api/guide':null,gym:session?'/api/gym#gym':null,sessionDays:30});
@@ -135,7 +136,7 @@ const server=http.createServer(async (req,res)=>{
   if(req.method==='GET' && url.pathname==='/owner') return send(res,200,ownerPage(),'text/html; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
   if(req.method==='POST' && url.pathname==='/api/owner/session'){
     if(limited(req,'owner',OWNER_RATE_MAX)) return send(res,429,{ok:false,error:'Too many owner sign-in attempts. Try again later.'});
-    if(!OWNER_SECRET || !GUIDE_SECRET) return send(res,503,{ok:false,error:'Owner access is not configured.'});
+    if(!OWNER_CONFIGURED || !GUIDE_SECRET) return send(res,503,{ok:false,error:'Owner access is not configured.'});
     try{
       const body=parseBody(await readBody(req),(req.headers['content-type']||'').toLowerCase());
       if(!safeEqual(body.secret,OWNER_SECRET)) return send(res,401,{ok:false,error:'Invalid owner access secret.'});
