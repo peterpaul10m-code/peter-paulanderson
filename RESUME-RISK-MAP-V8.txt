@@ -1,0 +1,35 @@
+AI Interview Gym — Zara Resume Risk Map V8
+
+Purpose
+- Turns confirmed resume evidence into a preparation-priority diagnostic.
+- Does not claim access to Micro1/Zara proprietary scoring, hidden prompts, or exact follow-up logic.
+- Highlights statements with natural interview follow-up territory so candidates know what they must be able to defend aloud.
+
+Risk signals
+- Quantified claim: know the measure, period, source, calculation, and verification.
+- Ownership / leadership: separate personal responsibility from team or manager responsibility.
+- Outcome / impact: explain attribution and other factors that may have influenced the result.
+- Judgment / quality risk: identify the standard, evidence, validation step, or control used.
+- Stakeholder complexity: explain disagreement, communication, and confirmation of understanding.
+- Technical depth: explain how a listed tool or skill was actually used.
+- Broad wording: convert vague claims into concrete, defensible examples.
+- Dense claim: practice a one-sentence version before adding detail.
+
+Each Risk Map card includes
+1. The exact confirmed resume anchor.
+2. Why it creates follow-up territory.
+3. Evidence signals detected.
+4. A defend checklist covering facts, numbers where applicable, scope, decisions, tradeoffs, and lessons.
+5. Follow-up questions to rehearse aloud.
+
+Freemium behavior
+- Monetization dormant: full 5-priority Risk Map + 8-question Resume Custom Plan.
+- Future Free tier: top 2 Risk Map priorities + 3 personalized questions.
+- Premium: up to 5 Risk Map priorities + full 8-question plan, 29-question Gym, mock sessions, ad-free use, and Field Guide.
+
+Privacy / integrity
+- PDF, DOCX, and TXT resumes are processed in memory by the Resume Lab endpoints.
+- Uploaded resume files are not intentionally saved to server storage.
+- Candidates review/edit extracted evidence before rebuilding the diagnostic.
+- The generator uses confirmed facts and does not invent employers, qualifications, metrics, responsibilities, tools, or outcomes.
+- Saving the generated plan is optional and uses browser localStorage on the candidate's device.
