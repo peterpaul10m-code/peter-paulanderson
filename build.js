@@ -1,0 +1,1 @@
+const fs=require('fs');const zlib=require('zlib');const parts=[1,2,3,4].map(i=>fs.readFileSync(`index.part${i}.txt`,'utf8').trim()).join('');fs.writeFileSync('index.html',zlib.gunzipSync(Buffer.from(parts,'base64')));console.log('Rebuilt index.html');
