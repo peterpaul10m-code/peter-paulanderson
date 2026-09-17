@@ -1,0 +1,19 @@
+AI Interview Gym — Render deployment
+
+1. Put all files in this folder at the root of a Git repository.
+2. In Render, create a Blueprint from that repository. Render will detect render.yaml.
+3. When prompted, set TWO separate long random secrets:
+   - LEAD_EXPORT_TOKEN — authenticates CSV exports.
+   - GUIDE_ACCESS_SECRET — signs 30-minute guide-access tokens.
+4. The Blueprint runs npm run build, creates one Node web service in Virginia, attaches a 1 GB persistent disk at /opt/render/project/src/data, and checks /api/health.
+5. After deployment, verify:
+   - GET /api/health returns ok:true and guideGate:true.
+   - GET /prep-guide.html returns 404.
+   - GET /api/guide without a token returns 401.
+   - Submit one test email and confirm the returned guide URL loads.
+   - Tamper with one character of the token and confirm 401.
+   - Submit the same email again and confirm normal success with a fresh guide token.
+   - Export with Authorization: Bearer <LEAD_EXPORT_TOKEN>.
+6. Remove the test lead from the CSV if you do not want it retained.
+
+Important: keep one instance while using the local CSV datastore. A Render service with a persistent disk cannot scale to multiple instances.
