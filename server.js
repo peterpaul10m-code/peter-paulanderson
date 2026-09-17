@@ -13,7 +13,9 @@ const GYM_FILE = path.join(ROOT, 'private', 'gym-content.html');
 const EXPORT_TOKEN = process.env.LEAD_EXPORT_TOKEN || '';
 const GUIDE_SECRET = process.env.GUIDE_ACCESS_SECRET || '';
 const OWNER_SECRET = process.env.OWNER_ACCESS_SECRET || '';
+const FIELD_GUIDE_CHECKOUT_URL = (process.env.FIELD_GUIDE_CHECKOUT_URL || '').trim();
 const OWNER_CONFIGURED = OWNER_SECRET.length >= 24 && OWNER_SECRET !== 'owner-access-not-configured';
+const OFFER_ENABLED = /^https:\/\//i.test(FIELD_GUIDE_CHECKOUT_URL);
 const ACCESS_TTL_MS = 30 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const SESSION_COOKIE = 'aig_access';
@@ -123,17 +125,31 @@ function protectedHtml(req,res,file,token){
   if(!access) return send(res,401,'Access requires a valid signup session or unexpired access link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
   return serveFile(res,file,{'X-Robots-Tag':'noindex, nofollow, noarchive','Content-Disposition':'inline'});
 }
+
+function offerPage(checkoutUrl){
+  const safeCheckout=String(checkoutUrl||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Special Offer · Zara Candidate Field Guide</title><style>
+  :root{--bg:#07101f;--card:#101b2f;--ink:#eaf1fb;--muted:#a9b7ca;--blue:#5b8cff;--line:#263955;--green:#8ce0c1}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#07101f,#0b1424);color:var(--ink);font:16px/1.55 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}.wrap{max-width:900px;margin:0 auto;padding:52px 22px 72px}.tag{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9db7ff;font-weight:800}.hero{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:32px;box-shadow:0 22px 70px rgba(0,0,0,.2)}h1{font-size:44px;line-height:1.03;letter-spacing:-.045em;margin:10px 0 14px;max-width:760px}.sub{font-size:19px;color:var(--muted);max-width:760px}.price{display:flex;align-items:end;gap:10px;margin:24px 0 8px}.price b{font-size:48px;line-height:1}.price span{color:var(--muted);padding-bottom:7px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:24px 0}.item{border:1px solid var(--line);border-radius:14px;padding:16px;background:#0c1728}.item b{display:block;margin-bottom:4px}.item span{color:var(--muted);font-size:14px}.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.buy,.skip{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:13px 18px;text-decoration:none;font-weight:850}.buy{background:var(--blue);color:#fff;min-width:245px}.skip{border:1px solid var(--line);color:var(--ink);background:#0b1525}.note{margin-top:16px;color:var(--muted);font-size:13px}.trust{margin-top:18px;padding:14px 16px;border-left:3px solid var(--green);background:#0c1a27;color:#cce9df;border-radius:8px}.foot{margin-top:34px;color:#71839c;font-size:12px}@media(max-width:680px){h1{font-size:35px}.grid{grid-template-columns:1fr}.hero{padding:24px}}
+  </style></head><body><main class="wrap"><div class="tag">Post-signup special offer · one-time purchase</div><section class="hero"><h1>Go beyond the free Gym with the Zara Candidate Field Guide.</h1><p class="sub">A focused 33-page rehearsal asset for candidates who want stronger spoken answers without memorizing scripts.</p><div class="price"><b>$29</b><span>USD · one time</span></div><div class="grid"><div class="item"><b>29 response labs</b><span>Stronger vs. weaker model responses for every core practice theme.</span></div><div class="item"><b>D.E.R.T.N. speaking map</b><span>A printable framework for direct answers, evidence, reasoning, tradeoffs, and next steps.</span></div><div class="item"><b>Cutoff-risk reduction</b><span>Practical delivery patterns that reduce false endings and premature turn-taking risk.</span></div><div class="item"><b>Role plug-in templates</b><span>Adaptable examples for audit/risk, quality assurance, and finance/analysis candidates.</span></div></div><div class="trust"><b>Your free Gym access is already active.</b> Buying the guide is optional. Skip this offer and continue practicing immediately.</div><div class="cta"><a class="buy" href="${safeCheckout}" rel="noopener noreferrer">Get the Field Guide - $29</a><a class="skip" href="/api/gym#gym">No thanks - continue to free Gym</a><a class="skip" href="/api/guide">Open free Prep Guide</a></div><p class="note">Independent Micro1/Zara preparation material. No subscription. No claim of access to Micro1 proprietary scoring rules or internal speech-pipeline triggers.</p></section><div class="foot">AI Interview Gym · Candidate preparation, not an official Micro1 product.</div></main></body></html>`;
+}
+
 function ownerPage(){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Interview Gym · Owner Access</title><style>body{font:16px/1.5 system-ui;margin:0;background:#0f172a;color:#e2e8f0}.box{max-width:460px;margin:10vh auto;padding:28px;background:#111827;border:1px solid #334155;border-radius:16px}input,button{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;margin-top:10px}button{font-weight:800;cursor:pointer}.msg{min-height:24px;margin-top:12px}a{color:#93c5fd}</style></head><body><main class="box"><h1>Owner access</h1><p>Sign in once on this browser to create a 30-day owner session.</p><form id="f"><input id="s" type="password" autocomplete="current-password" required placeholder="Owner access secret"><button>Sign in</button></form><div class="msg" id="m"></div></main><script>document.getElementById('f').addEventListener('submit',async e=>{e.preventDefault();const m=document.getElementById('m');m.textContent='Signing in…';const r=await fetch('/api/owner/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:document.getElementById('s').value})});let d={};try{d=await r.json()}catch(_){ }if(r.ok&&d.ok){m.innerHTML='<a href="/api/gym#gym">Open Practice Gym</a> · <a href="/api/guide">Open Prep Guide</a>';}else m.textContent=d.error||'Sign-in failed.';});</script></body></html>`;}
 
 const server=http.createServer(async (req,res)=>{
   const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
-  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',accessGate:!!GUIDE_SECRET,accessGateVersion:'v4-30-day-session',ownerAccess:OWNER_CONFIGURED});
+  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',accessGate:!!GUIDE_SECRET,accessGateVersion:'v5-tripwire-ready',ownerAccess:OWNER_CONFIGURED,fieldGuideOffer:OFFER_ENABLED});
   if(req.method==='GET' && url.pathname==='/api/access'){
     const session=sessionFromRequest(req);
-    return send(res,200,{ok:true,authorized:!!session,role:session?.role||null,guide:session?'/api/guide':null,gym:session?'/api/gym#gym':null,sessionDays:30});
+    return send(res,200,{ok:true,authorized:!!session,role:session?.role||null,guide:session?'/api/guide':null,gym:session?'/api/gym#gym':null,offer:session&&OFFER_ENABLED?'/offer':null,sessionDays:30});
   }
   if(req.method==='POST' && url.pathname==='/api/access/logout') return send(res,200,{ok:true},'application/json; charset=utf-8',{'Set-Cookie':clearSessionCookie()});
   if(req.method==='GET' && url.pathname==='/owner') return send(res,200,ownerPage(),'text/html; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+  if(req.method==='GET' && url.pathname==='/offer'){
+    if(!OFFER_ENABLED) return send(res,404,'Offer not configured','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+    const session=sessionFromRequest(req);
+    if(!session) return send(res,401,'This offer follows confirmed signup access.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+    return send(res,200,offerPage(FIELD_GUIDE_CHECKOUT_URL),'text/html; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+  }
   if(req.method==='POST' && url.pathname==='/api/owner/session'){
     if(limited(req,'owner',OWNER_RATE_MAX)) return send(res,429,{ok:false,error:'Too many owner sign-in attempts. Try again later.'});
     if(!OWNER_CONFIGURED || !GUIDE_SECRET) return send(res,503,{ok:false,error:'Owner access is not configured.'});
@@ -153,7 +169,7 @@ const server=http.createServer(async (req,res)=>{
       const result=appendLead(body.email,body.source);
       const token=signToken({kind:'signup'},ACCESS_TTL_MS,'lead-access');
       const encoded=encodeURIComponent(token);
-      return send(res,result.duplicate?200:201,{ok:true,guide:`/api/guide?token=${encoded}`,gym:`/api/gym?token=${encoded}#gym`,expiresIn:Math.floor(ACCESS_TTL_MS/1000),sessionDays:30,duplicate:result.duplicate,status:result.duplicate?'already_registered':'created'},'application/json; charset=utf-8',{'Set-Cookie':sessionCookie('lead')});
+      return send(res,result.duplicate?200:201,{ok:true,guide:`/api/guide?token=${encoded}`,gym:`/api/gym?token=${encoded}#gym`,offer:OFFER_ENABLED?'/offer':null,expiresIn:Math.floor(ACCESS_TTL_MS/1000),sessionDays:30,duplicate:result.duplicate,status:result.duplicate?'already_registered':'created'},'application/json; charset=utf-8',{'Set-Cookie':sessionCookie('lead')});
     }catch(err){
       if(err.message==='unsupported') return send(res,415,{ok:false,error:'Unsupported request format.'});
       return send(res,400,{ok:false,error:'Unable to process signup.'});
