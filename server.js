@@ -8,6 +8,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const LEADS_FILE = path.join(DATA_DIR, 'leads.csv');
+const GUIDE_FILE = path.join(ROOT, 'private', 'guide-content.html');
 const EXPORT_TOKEN = process.env.LEAD_EXPORT_TOKEN || '';
 const GUIDE_SECRET = process.env.GUIDE_ACCESS_SECRET || '';
 const GUIDE_TTL_MS = 30 * 60 * 1000;
@@ -83,7 +84,7 @@ function authorizedExport(auth){
 
 const server=http.createServer(async (req,res)=>{
   const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
-  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',guideGate:!!GUIDE_SECRET});
+  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',guideGate:!!GUIDE_SECRET,guideGateVersion:'v2-private-file'});
   if(req.method==='POST' && url.pathname==='/api/leads'){
     if(limited(req)) return send(res,429,{ok:false,error:'Too many attempts. Please try again later.'});
     try{
@@ -103,10 +104,10 @@ const server=http.createServer(async (req,res)=>{
   if(req.method==='GET' && url.pathname==='/api/guide'){
     const access=verifyGuideToken(url.searchParams.get('token')||'');
     if(!access) return send(res,401,'Guide access requires a valid, unexpired signup link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
-    return serveFile(res,path.join(ROOT,'prep-guide.html'),{'X-Robots-Tag':'noindex, nofollow, noarchive','Content-Disposition':'inline'});
+    return serveFile(res,GUIDE_FILE,{'X-Robots-Tag':'noindex, nofollow, noarchive','Content-Disposition':'inline'});
   }
   if(req.method==='GET' && url.pathname==='/prep-guide.html'){
-    return send(res,404,'Not found','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+    return send(res,410,'This public guide URL has been retired. Submit the email form to receive a short-lived access link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
   }
   if(req.method==='GET' && url.pathname==='/api/leads/export'){
     if(!EXPORT_TOKEN) return send(res,404,'Not found','text/plain; charset=utf-8');
