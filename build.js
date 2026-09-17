@@ -1,5 +1,7 @@
 const fs=require('fs');
 const zlib=require('zlib');
+if(fs.existsSync('prep-guide.html')) throw new Error('Public prep-guide.html must not exist');
+if(!fs.existsSync('private/guide-content.html')) throw new Error('Private guide content missing');
 const parts=[1,2,3,4].map(i=>fs.readFileSync(`index.part${i}.txt`,'utf8').trim()).join('');
 let html=zlib.gunzipSync(Buffer.from(parts,'base64')).toString('utf8');
 html=html.replace(
@@ -17,4 +19,4 @@ html=html.replace(
 if(html.includes('href="prep-guide.html"')) throw new Error('Static prep-guide link still present after patch');
 if(!html.includes("guideLink.href=data.guide")) throw new Error('Protected guide link patch failed');
 fs.writeFileSync('index.html',html);
-console.log('Rebuilt index.html with protected guide gate');
+console.log('Rebuilt index.html with protected guide gate v2; public guide file absent');
