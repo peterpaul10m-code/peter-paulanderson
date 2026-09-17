@@ -1,0 +1,40 @@
+AI Interview Gym — Freemium + Premium V6
+
+Architecture
+- Public landing page: no Gym question content.
+- Existing signup session: 30-day signed HttpOnly cookie.
+- Before monetization activation: existing full-Gym behavior remains intact.
+- After monetization activation:
+  - Free: Interview Opening, Delivery Mechanics, Questions 1–5, glossary, optional AdSense units.
+  - Premium: Questions 1–29, 6/8-question continuous mocks, ad-free Gym, Zara Candidate Field Guide delivered by Lemon Squeezy.
+- Questions 6–29 are physically absent from the free Gym HTML; this is not a CSS/JavaScript hide.
+
+Premium activation requirements
+All three must be configured before freemium activates:
+1. FIELD_GUIDE_CHECKOUT_URL — hosted Lemon Squeezy checkout link for the $29 product.
+2. LEMON_SQUEEZY_WEBHOOK_SECRET and LEMON_SQUEEZY_VARIANT_ID — verified order webhooks.
+3. PREMIUM_PERSISTENCE_READY=true — set only after durable /data storage is actually attached/configured.
+
+Lemon Squeezy webhook
+Endpoint: https://ai-interview-gym-micro1-zara.onrender.com/api/lemon/webhook
+Events: order_created, order_refunded
+- Requests are verified against X-Signature with HMAC-SHA256 over the raw body.
+- Only the configured variant ID can grant Premium.
+- The checkout URL is generated with the signed-in email prefilled and passed as checkout custom data.
+- A verified paid order grants Premium to that email.
+- A full refund revokes Premium on the next request. Partial refunds do not automatically revoke.
+- A returning/new device can re-enter the same purchase email through the signup form to recover Premium, provided durable entitlement storage remains available.
+
+AdSense
+Optional environment variables:
+- ADSENSE_CLIENT_ID (ca-pub-...)
+- ADSENSE_SLOT_INLINE
+- ADSENSE_SLOT_FOOTER
+AdSense loads only in the free Gym and only when all three values are configured. Premium HTML contains no AdSense code.
+Ad locations are separated from Previous/Next, recorder, mock, and navigation controls to reduce accidental-click risk.
+
+Owner access
+/owner remains Premium when OWNER_ACCESS_SECRET is configured.
+
+Important production dependency
+Do not set PREMIUM_PERSISTENCE_READY=true until durable storage is actually in place. The current Render free service does not have reliable persistent filesystem storage across redeploys/restarts.
