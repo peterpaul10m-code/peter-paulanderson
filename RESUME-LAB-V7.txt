@@ -1,0 +1,62 @@
+AI Interview Gym — Resume Customization V7
+
+Purpose
+Scale the Micro1/Zara Practice Gym beyond one person's resume by generating evidence-grounded interview rehearsal from each candidate's own resume.
+
+Positioning
+- Interview preparation, not a job offer or hiring guarantee.
+- Do not claim access to Micro1's proprietary scoring rules.
+- Resume questions are practice prompts generated only from candidate-confirmed evidence.
+
+Resume Lab flow
+1. Candidate signs up / has an active access session.
+2. Upload PDF, DOCX, or TXT resume (max 3 MB).
+3. Server parses the document in memory; the raw resume is not written to disk.
+4. Resume Lab returns editable evidence anchors and detected skills.
+5. Candidate reviews/edits the anchors before generation.
+6. Generate personalized resume questions and D.E.R.T.N. speaking routes.
+7. Optional: save the resulting plan in localStorage on that browser. The raw uploaded resume is not stored.
+
+Tier behavior
+- Before monetization activation: full Resume Lab remains available so the current product is not degraded.
+- After freemium activation:
+  - Free: Resume Scan + 3 personalized questions.
+  - Premium: full 8-question Resume Custom Plan.
+
+Question plan
+1. 60–90 second background overview.
+2. Deep dive on a top resume achievement.
+3. Skill application example.
+4. Quantified-result verification.
+5. Judgment under ambiguity.
+6. Attention-to-detail example.
+7. Explaining a detailed issue to a nontechnical person.
+8. Why the candidate's documented experience supports Generalist work.
+
+Privacy / integrity controls
+- Supported files: PDF, DOCX, TXT.
+- Max file size: 3 MB.
+- Resume parser endpoints require an active session.
+- Upload and plan endpoints are rate-limited.
+- Contact lines / obvious URLs are excluded from evidence-anchor ranking where possible.
+- Resume files are processed in memory only and are not persisted by these endpoints.
+- The candidate can edit extracted facts before generating questions.
+- The generator is deterministic and evidence-bound; it does not invent employers, achievements, metrics, tools, or credentials not present in the confirmed anchors.
+
+Endpoints
+POST /api/resume/analyze
+POST /api/resume/plan
+
+Parsers
+- PDF: pdf-parse 2.4.5
+- DOCX: mammoth ^1.12.3
+- TXT: native UTF-8 parsing
+
+Build / deployment
+- build.js is a small loader for build.bundle.txt.
+- server.js is a small loader for server.bundle.txt.
+- Bundles contain the tested v7 source and execute in isolated function scopes.
+- Health endpoint version: v7-resume-customization.
+
+Existing monetization safeguards remain in force
+Premium sales cannot activate until checkout, verified Lemon Squeezy webhooks, durable persistence, and private deployment source are all configured.
