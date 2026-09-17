@@ -13,11 +13,23 @@ services:
         sync: false
       - key: GUIDE_ACCESS_SECRET
         sync: false
-      - key: FIELD_GUIDE_CHECKOUT_URL
-        sync: false
       - key: OWNER_ACCESS_SECRET
         sync: false
+      - key: FIELD_GUIDE_CHECKOUT_URL
+        sync: false
+      - key: LEMON_SQUEEZY_WEBHOOK_SECRET
+        sync: false
+      - key: LEMON_SQUEEZY_VARIANT_ID
+        sync: false
+      - key: PREMIUM_PERSISTENCE_READY
+        sync: false
+      - key: ADSENSE_CLIENT_ID
+        sync: false
+      - key: ADSENSE_SLOT_INLINE
+        sync: false
+      - key: ADSENSE_SLOT_FOOTER
+        sync: false
     disk:
-      name: lead-data
+      name: lead-and-entitlement-data
       mountPath: /opt/render/project/src/data
       sizeGB: 1
