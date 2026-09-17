@@ -9,9 +9,10 @@ const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const LEADS_FILE = path.join(DATA_DIR, 'leads.csv');
 const GUIDE_FILE = path.join(ROOT, 'private', 'guide-content.html');
+const GYM_FILE = path.join(ROOT, 'private', 'gym-content.html');
 const EXPORT_TOKEN = process.env.LEAD_EXPORT_TOKEN || '';
 const GUIDE_SECRET = process.env.GUIDE_ACCESS_SECRET || '';
-const GUIDE_TTL_MS = 30 * 60 * 1000;
+const ACCESS_TTL_MS = 30 * 60 * 1000;
 const MAX_BODY = 16 * 1024;
 const RATE_WINDOW = 10 * 60 * 1000;
 const RATE_MAX = 8;
@@ -47,13 +48,13 @@ function appendLead(email, source){
   return {email:normalized, duplicate:existing};
 }
 function b64url(input){return Buffer.from(input).toString('base64url');}
-function signGuideToken(email){
+function signAccessToken(email){
   if(!GUIDE_SECRET) return '';
-  const payload=b64url(JSON.stringify({aud:'prep-guide',email,exp:Date.now()+GUIDE_TTL_MS}));
+  const payload=b64url(JSON.stringify({aud:'lead-access',email,exp:Date.now()+ACCESS_TTL_MS}));
   const sig=crypto.createHmac('sha256',GUIDE_SECRET).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 }
-function verifyGuideToken(token){
+function verifyAccessToken(token){
   if(!GUIDE_SECRET || typeof token!=='string') return null;
   const parts=token.split('.'); if(parts.length!==2) return null;
   const [payload,sig]=parts;
@@ -62,7 +63,7 @@ function verifyGuideToken(token){
   if(a.length!==b.length || !crypto.timingSafeEqual(a,b)) return null;
   try{
     const data=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
-    if(data.aud!=='prep-guide' || !data.email || !Number.isFinite(data.exp) || Date.now()>data.exp) return null;
+    if(data.aud!=='lead-access' || !data.email || !Number.isFinite(data.exp) || Date.now()>data.exp) return null;
     return data;
   }catch(_){return null;}
 }
@@ -81,10 +82,15 @@ function authorizedExport(auth){
   const a=Buffer.from(auth||''), b=Buffer.from(EXPORT_TOKEN);
   return a.length===b.length && crypto.timingSafeEqual(a,b);
 }
+function protectedHtml(res,file,token){
+  const access=verifyAccessToken(token||'');
+  if(!access) return send(res,401,'Access requires a valid, unexpired signup link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+  return serveFile(res,file,{'X-Robots-Tag':'noindex, nofollow, noarchive','Content-Disposition':'inline'});
+}
 
 const server=http.createServer(async (req,res)=>{
   const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
-  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',guideGate:!!GUIDE_SECRET,guideGateVersion:'v2-private-file'});
+  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym-leads',accessGate:!!GUIDE_SECRET,accessGateVersion:'v3-private-guide-and-gym'});
   if(req.method==='POST' && url.pathname==='/api/leads'){
     if(limited(req)) return send(res,429,{ok:false,error:'Too many attempts. Please try again later.'});
     try{
@@ -95,19 +101,20 @@ const server=http.createServer(async (req,res)=>{
       else return send(res,415,{ok:false,error:'Unsupported request format.'});
       if(body.website) return send(res,200,{ok:true});
       if(!validEmail(body.email)) return send(res,400,{ok:false,error:'Enter a valid email address.'});
-      if(!GUIDE_SECRET) return send(res,503,{ok:false,error:'Guide access is temporarily unavailable.'});
+      if(!GUIDE_SECRET) return send(res,503,{ok:false,error:'Access is temporarily unavailable.'});
       const result=appendLead(body.email,body.source);
-      const token=signGuideToken(result.email);
-      return send(res,result.duplicate?200:201,{ok:true,guide:`/api/guide?token=${encodeURIComponent(token)}`,expiresIn:Math.floor(GUIDE_TTL_MS/1000),duplicate:result.duplicate,status:result.duplicate?'already_registered':'created'});
+      const token=signAccessToken(result.email);
+      const encoded=encodeURIComponent(token);
+      return send(res,result.duplicate?200:201,{ok:true,guide:`/api/guide?token=${encoded}`,gym:`/api/gym?token=${encoded}#gym`,expiresIn:Math.floor(ACCESS_TTL_MS/1000),duplicate:result.duplicate,status:result.duplicate?'already_registered':'created'});
     }catch(err){return send(res,400,{ok:false,error:'Unable to process signup.'});}
   }
-  if(req.method==='GET' && url.pathname==='/api/guide'){
-    const access=verifyGuideToken(url.searchParams.get('token')||'');
-    if(!access) return send(res,401,'Guide access requires a valid, unexpired signup link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
-    return serveFile(res,GUIDE_FILE,{'X-Robots-Tag':'noindex, nofollow, noarchive','Content-Disposition':'inline'});
-  }
+  if(req.method==='GET' && url.pathname==='/api/guide') return protectedHtml(res,GUIDE_FILE,url.searchParams.get('token'));
+  if(req.method==='GET' && url.pathname==='/api/gym') return protectedHtml(res,GYM_FILE,url.searchParams.get('token'));
   if(req.method==='GET' && url.pathname==='/prep-guide.html'){
     return send(res,410,'This public guide URL has been retired. Submit the email form to receive a short-lived access link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
+  }
+  if(req.method==='GET' && (url.pathname==='/gym' || url.pathname==='/gym.html')){
+    return send(res,401,'The Practice Gym requires a valid signup access link.','text/plain; charset=utf-8',{'X-Robots-Tag':'noindex, nofollow, noarchive'});
   }
   if(req.method==='GET' && url.pathname==='/api/leads/export'){
     if(!EXPORT_TOKEN) return send(res,404,'Not found','text/plain; charset=utf-8');
