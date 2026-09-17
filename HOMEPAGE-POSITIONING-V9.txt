@@ -1,0 +1,39 @@
+AI Interview Gym — Homepage Positioning V9
+
+Purpose
+- Keep the business deliberately niche around the Micro1 Generalist opportunity and Zara interview preparation.
+- Serve two visitor intents without becoming a generic AI-trainer or generic make-money-online site.
+
+Visitor path 1 — Opportunity discovery
+- For people searching for legitimate remote/online work.
+- Explain the current Micro1 Generalist opportunity using published Micro1 facts.
+- Current snapshot checked September 17, 2026: remote contractor role; advertised pay $50–$90/hour; skills listed include data annotation, critical thinking, attention to detail, written/verbal communication, and remote collaboration.
+- Link candidates directly to the live Micro1 job listing.
+- State clearly that pay, availability, project scope, hours, eligibility, and hiring decisions can change.
+- AI Interview Gym does not employ candidates, submit applications, guarantee work, guarantee income, or guarantee selection.
+
+Visitor path 2 — Existing applicant
+- For candidates who have already applied or expect a Zara interview.
+- Route directly toward Resume Lab, Resume Risk Map, personalized questions, spoken practice, and mock sessions.
+- Position the core principle as: “Prepare what you can defend.”
+
+Homepage structure
+1. Micro1-specific hero with two entry CTAs.
+2. Two-path intent section.
+3. Current Micro1 Generalist opportunity summary with direct live-listing link.
+4. Applicant preparation track.
+5. Credible explanation of Zara interview pressure without pass guarantees.
+6. Resume-personalized preparation method.
+7. Narrow Micro1/Zara product proof.
+8. Free access gate and freemium preview.
+
+Trust / integrity
+- Avoid “available to everybody worldwide.” Use the live listing and caveat geographic/project eligibility.
+- Avoid guaranteed pass, guaranteed job, or guaranteed income claims.
+- Avoid presenting candidate-reported patterns as official Micro1 rules.
+- Do not use JobPosting structured data because AI Interview Gym is not the employer/recruiter.
+- Public homepage must not contain protected question-bank or mock-session content.
+
+Current external source links used in public copy
+- Micro1 Generalist listing: https://jobs.micro1.ai/post/8b1146d2-f854-4461-83e0-4c4bbde847e7
+- Micro1 interview guide is used for internal copy validation; candidates are not told AI Interview Gym is official Micro1 material.
