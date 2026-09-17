@@ -1,0 +1,12 @@
+AI INTERVIEW GYM - MONETIZATION V1
+
+Offer: Zara Candidate Field Guide
+Price: USD 29 one-time
+Funnel: confirmed email signup -> 30-day access cookie -> /offer -> optional checkout -> free Gym remains available
+Activation: set FIELD_GUIDE_CHECKOUT_URL to the real hosted checkout URL. If the variable is missing or not https://, the offer is disabled and signup behaves as before.
+
+Safety / integrity:
+- The paid PDF is not stored in the public deployment repo.
+- The offer does not claim verified Micro1 pass/fail scores or proprietary trigger phrases.
+- "No thanks - continue to free Gym" remains visible.
+- Returning users are not repeatedly forced through the offer; the tripwire is shown immediately after signup only when configured.
