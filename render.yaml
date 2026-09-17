@@ -13,6 +13,8 @@ services:
         sync: false
       - key: GUIDE_ACCESS_SECRET
         sync: false
+      - key: FIELD_GUIDE_CHECKOUT_URL
+        sync: false
       - key: OWNER_ACCESS_SECRET
         sync: false
     disk:
