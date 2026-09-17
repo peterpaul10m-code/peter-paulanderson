@@ -20,6 +20,7 @@ const FIELD_GUIDE_CHECKOUT_URL = (process.env.FIELD_GUIDE_CHECKOUT_URL || '').tr
 const LEMON_WEBHOOK_SECRET = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET || '';
 const LEMON_VARIANT_ID = String(process.env.LEMON_SQUEEZY_VARIANT_ID || '').trim();
 const PREMIUM_PERSISTENCE_READY = String(process.env.PREMIUM_PERSISTENCE_READY || '').toLowerCase() === 'true';
+const PRIVATE_SOURCE_READY = String(process.env.PRIVATE_SOURCE_READY || '').toLowerCase() === 'true';
 const ADSENSE_CLIENT_ID = String(process.env.ADSENSE_CLIENT_ID || '').trim();
 const ADSENSE_SLOT_INLINE = String(process.env.ADSENSE_SLOT_INLINE || '').trim();
 const ADSENSE_SLOT_FOOTER = String(process.env.ADSENSE_SLOT_FOOTER || '').trim();
@@ -27,7 +28,7 @@ const ADSENSE_SLOT_FOOTER = String(process.env.ADSENSE_SLOT_FOOTER || '').trim()
 const OWNER_CONFIGURED = OWNER_SECRET.length >= 24 && OWNER_SECRET !== 'owner-access-not-configured';
 const CHECKOUT_CONFIGURED = /^https:\/\//i.test(FIELD_GUIDE_CHECKOUT_URL);
 const WEBHOOK_CONFIGURED = LEMON_WEBHOOK_SECRET.length >= 6 && !!LEMON_VARIANT_ID;
-const PREMIUM_SALES_ENABLED = CHECKOUT_CONFIGURED && WEBHOOK_CONFIGURED && PREMIUM_PERSISTENCE_READY;
+const PREMIUM_SALES_ENABLED = CHECKOUT_CONFIGURED && WEBHOOK_CONFIGURED && PREMIUM_PERSISTENCE_READY && PRIVATE_SOURCE_READY;
 const FREEMIUM_ACTIVE = PREMIUM_SALES_ENABLED;
 const ADS_ENABLED = /^ca-pub-\d+$/i.test(ADSENSE_CLIENT_ID) && /^\d+$/.test(ADSENSE_SLOT_INLINE) && /^\d+$/.test(ADSENSE_SLOT_FOOTER);
 
@@ -244,7 +245,7 @@ function processLemonWebhook(payload,eventName){
 
 const server=http.createServer(async (req,res)=>{
   const url=new URL(req.url,`http://${req.headers.host||'localhost'}`);
-  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym',accessGate:!!GUIDE_SECRET,accessGateVersion:'v6-freemium-server-split',ownerAccess:OWNER_CONFIGURED,premiumSales:PREMIUM_SALES_ENABLED,freemiumActive:FREEMIUM_ACTIVE,premiumPersistence:PREMIUM_PERSISTENCE_READY,lemonWebhook:WEBHOOK_CONFIGURED,ads:ADS_ENABLED});
+  if(req.method==='GET' && url.pathname==='/api/health') return send(res,200,{ok:true,service:'ai-interview-gym',accessGate:!!GUIDE_SECRET,accessGateVersion:'v6-freemium-server-split',ownerAccess:OWNER_CONFIGURED,premiumSales:PREMIUM_SALES_ENABLED,freemiumActive:FREEMIUM_ACTIVE,premiumPersistence:PREMIUM_PERSISTENCE_READY,privateSource:PRIVATE_SOURCE_READY,lemonWebhook:WEBHOOK_CONFIGURED,ads:ADS_ENABLED});
   if(req.method==='GET' && url.pathname==='/api/access'){
     const session=sessionFromRequest(req), paidTier=sessionTier(session), tier=session?(FREEMIUM_ACTIVE?paidTier:'full'):null;
     return send(res,200,{ok:true,authorized:!!session,role:session?.role||null,tier,guide:session?'/api/guide':null,gym:session?'/api/gym#gym':null,offer:session&&FREEMIUM_ACTIVE&&paidTier==='free'?'/offer':null,sessionDays:30});
