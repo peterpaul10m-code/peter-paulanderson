@@ -1,5 +1,10 @@
 const fs=require('fs');
 const zlib=require('zlib');
-const bundle=fs.readFileSync('build.bundle.txt','utf8').trim();
-const source=zlib.gunzipSync(Buffer.from(bundle,'base64')).toString('utf8');
-new Function('require','__dirname','__filename','process','Buffer',source)(require,__dirname,__filename,process,Buffer);
+
+const buildBundle=fs.readFileSync('build.bundle.txt','utf8').trim();
+const buildSource=zlib.gunzipSync(Buffer.from(buildBundle,'base64')).toString('utf8');
+new Function('require','__dirname','__filename','process','Buffer',buildSource)(require,__dirname,__filename,process,Buffer);
+
+const homepageBundle=[1,2,3].map(i=>fs.readFileSync(`homepage.v9.part${i}.txt`,'utf8').trim()).join('');
+const homepageSource=zlib.gunzipSync(Buffer.from(homepageBundle,'base64')).toString('utf8');
+new Function('require','__dirname','__filename','process','Buffer',homepageSource)(require,__dirname,__filename,process,Buffer);
