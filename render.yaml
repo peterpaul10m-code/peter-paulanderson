@@ -23,6 +23,8 @@ services:
         sync: false
       - key: PREMIUM_PERSISTENCE_READY
         sync: false
+      - key: PRIVATE_SOURCE_READY
+        sync: false
       - key: ADSENSE_CLIENT_ID
         sync: false
       - key: ADSENSE_SLOT_INLINE
